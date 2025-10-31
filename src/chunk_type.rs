@@ -4,11 +4,13 @@ use std::{
     str::FromStr,
 };
 
+/// Represents a PNG chunk type, consisting of 4 ASCII letters.
 #[derive(PartialEq, Eq, Debug, Clone)]
 pub struct ChunkType {
     bytes: [u8; 4],
 }
 
+/// Attempts to create a ChunkType from a byte array.
 impl TryFrom<[u8; 4]> for ChunkType {
     type Error = Box<dyn Error>;
 
@@ -17,6 +19,7 @@ impl TryFrom<[u8; 4]> for ChunkType {
     }
 }
 
+/// Parses a string into a ChunkType.
 impl FromStr for ChunkType {
     type Err = Box<dyn Error>;
 
@@ -32,6 +35,7 @@ impl FromStr for ChunkType {
     }
 }
 
+/// Formats the ChunkType as a string.
 impl Display for ChunkType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let bytes_str = str::from_utf8(&self.bytes).map_err(|_| fmt::Error)?;
@@ -40,26 +44,32 @@ impl Display for ChunkType {
 }
 
 impl ChunkType {
+    /// Returns the bytes of the chunk type.
     pub fn bytes(&self) -> [u8; 4] {
         self.bytes
     }
 
+    /// Checks if the chunk type is valid according to PNG spec.
     pub fn is_valid(&self) -> bool {
         self.bytes.iter().all(u8::is_ascii_alphabetic) && self.is_reserved_bit_valid()
     }
 
+    /// Checks if the chunk is critical.
     pub fn is_critical(&self) -> bool {
         self.bytes[0].is_ascii_uppercase()
     }
 
+    /// Checks if the chunk is public.
     pub fn is_public(&self) -> bool {
         self.bytes[1].is_ascii_uppercase()
     }
 
+    /// Checks if the reserved bit is valid.
     pub fn is_reserved_bit_valid(&self) -> bool {
         self.bytes[2].is_ascii_uppercase()
     }
 
+    /// Checks if the chunk is safe to copy.
     pub fn is_safe_to_copy(&self) -> bool {
         self.bytes[3].is_ascii_lowercase()
     }

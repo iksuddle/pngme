@@ -5,6 +5,7 @@ use std::{
     io::{BufReader, Read},
 };
 
+/// Represents a PNG chunk with length, type, data, and CRC.
 #[derive(Debug, Clone)]
 pub struct Chunk {
     length: u32,
@@ -13,6 +14,69 @@ pub struct Chunk {
     crc: u32,
 }
 
+impl Chunk {
+    /// Creates a new Chunk with the given type and data.
+    pub fn new(chunk_type: ChunkType, data: Vec<u8>) -> Chunk {
+        let length: u32 = data
+            .len()
+            .try_into()
+            .expect("chunk too large, length needs to fit in u32");
+
+        let crc_algo = crc::Crc::<u32>::new(&crc::CRC_32_ISO_HDLC);
+        let mut digest = crc_algo.digest();
+        digest.update(&chunk_type.bytes());
+        digest.update(data.as_slice());
+        let crc = digest.finalize();
+
+        Chunk {
+            length,
+            chunk_type,
+            data,
+            crc,
+        }
+    }
+
+    /// Returns the length of the chunk data.
+    pub fn length(&self) -> u32 {
+        self.length
+    }
+
+    /// Returns the chunk type.
+    pub fn chunk_type(&self) -> &ChunkType {
+        &self.chunk_type
+    }
+
+    /// Returns the chunk data as a byte slice.
+    pub fn data(&self) -> &[u8] {
+        &self.data
+    }
+
+    /// Returns the CRC checksum.
+    pub fn crc(&self) -> u32 {
+        self.crc
+    }
+
+    /// Attempts to interpret the data as a UTF-8 string.
+    pub fn data_as_string(&self) -> crate::Result<String> {
+        Ok(str::from_utf8(&self.data)?.to_owned())
+    }
+
+    /// Returns the chunk as a byte vector.
+    pub fn as_bytes(&self) -> Vec<u8> {
+        let length_bytes: [u8; 4] = self.length.to_be_bytes();
+        let crc_bytes: [u8; 4] = self.crc.to_be_bytes();
+
+        let mut bytes = vec![];
+        bytes.extend_from_slice(&length_bytes);
+        bytes.extend(self.chunk_type.bytes());
+        bytes.extend(&self.data);
+        bytes.extend_from_slice(&crc_bytes);
+
+        bytes
+    }
+}
+
+/// Attempts to create a Chunk from a byte slice.
 impl TryFrom<&[u8]> for Chunk {
     type Error = Box<dyn Error>;
 
@@ -52,6 +116,7 @@ impl TryFrom<&[u8]> for Chunk {
     }
 }
 
+/// Formats the Chunk for display.
 impl fmt::Display for Chunk {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "Chunk {{",)?;
@@ -61,61 +126,6 @@ impl fmt::Display for Chunk {
         writeln!(f, "  Crc: {}", self.crc())?;
         writeln!(f, "}}",)?;
         Ok(())
-    }
-}
-
-impl Chunk {
-    pub fn new(chunk_type: ChunkType, data: Vec<u8>) -> Chunk {
-        let length: u32 = data
-            .len()
-            .try_into()
-            .expect("chunk too large, length needs to fit in u32");
-
-        let crc_algo = crc::Crc::<u32>::new(&crc::CRC_32_ISO_HDLC);
-        let mut digest = crc_algo.digest();
-        digest.update(&chunk_type.bytes());
-        digest.update(data.as_slice());
-        let crc = digest.finalize();
-
-        Chunk {
-            length,
-            chunk_type,
-            data,
-            crc,
-        }
-    }
-
-    pub fn length(&self) -> u32 {
-        self.length
-    }
-
-    pub fn chunk_type(&self) -> &ChunkType {
-        &self.chunk_type
-    }
-
-    pub fn data(&self) -> &[u8] {
-        &self.data
-    }
-
-    pub fn crc(&self) -> u32 {
-        self.crc
-    }
-
-    pub fn data_as_string(&self) -> Result<String, Box<dyn Error>> {
-        Ok(str::from_utf8(&self.data)?.to_owned())
-    }
-
-    pub fn as_bytes(&self) -> Vec<u8> {
-        let length_bytes: [u8; 4] = self.length.to_be_bytes();
-        let crc_bytes: [u8; 4] = self.crc.to_be_bytes();
-
-        let mut bytes = vec![];
-        bytes.extend_from_slice(&length_bytes);
-        bytes.extend(self.chunk_type.bytes());
-        bytes.extend(&self.data);
-        bytes.extend_from_slice(&crc_bytes);
-
-        bytes
     }
 }
 
