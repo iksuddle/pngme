@@ -1,6 +1,6 @@
 use std::{
     error::Error,
-    fmt,
+    fmt, fs,
     io::{BufReader, Read},
     path::Path,
     str::FromStr,
@@ -26,7 +26,8 @@ impl Png {
 
     /// Creates a `Png` from a file path
     pub fn from_file<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
-        todo!()
+        let bytes: &[u8] = &fs::read("image.png")?;
+        Png::try_from(bytes)
     }
 
     /// Appends a chunk to the end of this `Png` file's `Chunk` list.
