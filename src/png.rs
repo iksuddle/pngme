@@ -1,10 +1,12 @@
 use std::{
     error::Error,
+    fmt,
     io::{BufReader, Read},
     path::Path,
+    str::FromStr,
 };
 
-use crate::chunk::Chunk;
+use crate::{chunk::Chunk, chunk_type::ChunkType};
 
 pub struct Png {
     header: [u8; 8],
@@ -16,7 +18,10 @@ impl Png {
 
     /// Creates a `Png` from a list of chunks using the correct header
     pub fn from_chunks(chunks: Vec<Chunk>) -> Self {
-        todo!()
+        Png {
+            header: Self::STANDARD_HEADER,
+            chunks,
+        }
     }
 
     /// Creates a `Png` from a file path
@@ -26,35 +31,49 @@ impl Png {
 
     /// Appends a chunk to the end of this `Png` file's `Chunk` list.
     pub fn append_chunk(&mut self, chunk: Chunk) {
-        todo!()
+        self.chunks.push(chunk);
     }
 
     /// Searches for a `Chunk` with the specified `chunk_type` and removes the first
     /// matching `Chunk` from this `Png` list of chunks.
     pub fn remove_first_chunk(&mut self, chunk_type: &str) -> crate::Result<Chunk> {
-        todo!()
+        let chunk_type = ChunkType::from_str(chunk_type)?;
+        let i = self
+            .chunks
+            .iter()
+            .position(|c| c.chunk_type() == &chunk_type)
+            .ok_or("noo")?;
+        Ok(self.chunks.remove(i))
     }
 
     /// The header of this PNG.
     pub fn header(&self) -> &[u8; 8] {
-        todo!()
+        &Self::STANDARD_HEADER
     }
 
     /// Lists the `Chunk`s stored in this `Png`
     pub fn chunks(&self) -> &[Chunk] {
-        todo!()
+        &self.chunks
     }
 
     /// Searches for a `Chunk` with the specified `chunk_type` and returns the first
     /// matching `Chunk` from this `Png`.
     pub fn chunk_by_type(&self, chunk_type: &str) -> Option<&Chunk> {
-        todo!()
+        let chunk_type = ChunkType::from_str(chunk_type).ok()?;
+        self.chunks.iter().find(|c| c.chunk_type() == &chunk_type)
     }
 
     /// Returns this `Png` as a byte sequence.
     /// These bytes will contain the header followed by the bytes of all of the chunks.
     pub fn as_bytes(&self) -> Vec<u8> {
-        todo!()
+        let mut bytes = Vec::new();
+
+        bytes.extend_from_slice(&self.header);
+        for c in &self.chunks {
+            bytes.extend(c.as_bytes());
+        }
+
+        bytes
     }
 }
 
@@ -84,6 +103,16 @@ impl TryFrom<&[u8]> for Png {
         }
 
         Ok(Png::from_chunks(chunks))
+    }
+}
+
+impl fmt::Display for Png {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self.header)?;
+        for c in &self.chunks {
+            write!(f, "{}", c)?;
+        }
+        Ok(())
     }
 }
 
