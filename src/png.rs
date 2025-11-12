@@ -26,7 +26,7 @@ impl Png {
 
     /// Creates a `Png` from a file path
     pub fn from_file<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
-        let bytes: &[u8] = &fs::read("image.png")?;
+        let bytes: &[u8] = &fs::read(path)?;
         Png::try_from(bytes)
     }
 
@@ -123,7 +123,6 @@ mod tests {
     use crate::chunk::Chunk;
     use crate::chunk_type::ChunkType;
     use std::convert::TryFrom;
-    use std::str::FromStr;
 
     fn testing_chunks() -> Vec<Chunk> {
         vec![
