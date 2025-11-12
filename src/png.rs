@@ -42,8 +42,8 @@ impl Png {
         let i = self
             .chunks
             .iter()
-            .position(|c| c.chunk_type() == &chunk_type)
-            .ok_or("noo")?;
+            .position(|c| c.chunk_type() == &chunk_type && !c.chunk_type().is_critical())
+            .ok_or("chunk to remove not found or is critical")?;
         Ok(self.chunks.remove(i))
     }
 

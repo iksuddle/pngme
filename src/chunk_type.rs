@@ -46,8 +46,13 @@ impl ChunkType {
 impl TryFrom<[u8; 4]> for ChunkType {
     type Error = Box<dyn Error>;
 
-    fn try_from(value: [u8; 4]) -> Result<Self, Self::Error> {
-        Ok(ChunkType { bytes: value })
+    fn try_from(bytes: [u8; 4]) -> Result<Self, Self::Error> {
+        let chunk_type = ChunkType { bytes };
+        if chunk_type.is_valid() {
+            Ok(chunk_type)
+        } else {
+            Err("invalid chunk type".into())
+        }
     }
 }
 
