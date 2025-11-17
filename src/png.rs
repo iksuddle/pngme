@@ -47,10 +47,7 @@ impl Png {
         Ok(self.chunks.remove(i))
     }
 
-    /// The header of this PNG.
-    pub fn header(&self) -> &[u8; 8] {
-        &Self::STANDARD_HEADER
-    }
+
 
     /// Lists the `Chunk`s stored in this `Png`
     pub fn chunks(&self) -> &[Chunk] {
@@ -239,9 +236,9 @@ mod tests {
     #[test]
     fn test_remove_first_chunk() {
         let mut png = testing_png();
-        png.append_chunk(chunk_from_strings("TeSt", "Message").unwrap());
-        png.remove_first_chunk("TeSt").unwrap();
-        let chunk = png.chunk_by_type("TeSt");
+        png.append_chunk(chunk_from_strings("teSt", "Message").unwrap());
+        png.remove_first_chunk("teSt").unwrap();
+        let chunk = png.chunk_by_type("teSt");
         assert!(chunk.is_none());
     }
 

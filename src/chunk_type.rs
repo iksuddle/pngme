@@ -10,6 +10,7 @@ pub struct ChunkType {
     bytes: [u8; 4],
 }
 
+#[allow(dead_code)]
 impl ChunkType {
     /// Returns the bytes of the chunk type.
     pub fn bytes(&self) -> [u8; 4] {
@@ -27,7 +28,7 @@ impl ChunkType {
     }
 
     /// Checks if the chunk is public.
-    pub fn is_public(&self) -> bool {
+    fn is_public(&self) -> bool {
         self.bytes[1].is_ascii_uppercase()
     }
 
@@ -37,7 +38,7 @@ impl ChunkType {
     }
 
     /// Checks if the chunk is safe to copy.
-    pub fn is_safe_to_copy(&self) -> bool {
+    fn is_safe_to_copy(&self) -> bool {
         self.bytes[3].is_ascii_lowercase()
     }
 }
